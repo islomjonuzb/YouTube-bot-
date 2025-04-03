@@ -1,0 +1,38 @@
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from pytube import YouTube
+import os
+
+
+TOKEN = "2037458397:AAGWH_RHSUvvh5U5jIGAQtK74JDkOFh09a0"
+
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text("Salom! YouTube video yuklab beruvchi botman. Menga YouTube linkini yuboring.")
+
+def download_video(update: Update, context: CallbackContext):
+    url = update.message.text
+    try:
+        yt = YouTube(url)
+        stream = yt.streams.get_highest_resolution()
+        filename = stream.download()
+        
+        update.message.reply_text("Video yuklab olindi! Jo‘natilmoqda...")
+        with open(filename, "rb") as video:
+            update.message.reply_video(video)
+        
+        os.remove(filename)  # Faylni o‘chirish
+    except Exception as e:
+        update.message.reply_text(f"Xatolik yuz berdi: {e}")
+
+def main():
+    updater = Updater(TOKEN, use_context=True)
+    dp = updater.dispatcher
+
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, download_video))
+
+    updater.start_polling()
+    updater.idle()
+
+if name == "main":
+    main()
